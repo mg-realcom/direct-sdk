@@ -1,0 +1,52 @@
+run:
+  concurrency: 12
+  skip-dirs:
+      - pb
+
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - contextcheck
+    - decorder
+    - durationcheck
+    - errname
+    - errorlint
+    - exportloopref
+    - forcetypeassert
+    - gochecknoglobals
+    - gochecknoinits
+    - godot
+    - goheader
+    - gomnd
+    - gosec
+    - gosimple
+    - grouper
+    - importas
+    - ineffassign
+    - interfacebloat
+    - ireturn
+    - loggercheck
+    - makezero
+    - musttag
+    - nakedret
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - prealloc
+    - reassign
+    - rowserrcheck
+    - sqlclosecheck
+    - stylecheck
+    - testableexamples
+    - testpackage
+    - unconvert
+    - usestdlibvars
+    - wrapcheck
+    - wsl

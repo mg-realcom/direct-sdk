@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	anti_fraud "github.com/mg-realcom/direct-sdk/anti-fraud"
 	"github.com/mg-realcom/direct-sdk/common"
 	"github.com/mg-realcom/direct-sdk/statistics"
 	"github.com/rs/zerolog"
@@ -255,6 +256,51 @@ func (c *Client) waitInfo(reportName string) {
 	if c.statisticsLimit.reportsInQueue > 1 {
 		c.logger.Info().Msg(fmt.Sprintf("Количество отчетов в очереди %v\n", c.statisticsLimit.reportsInQueue))
 	}
+}
+
+func (c *Client) GetYclidStat(ctx context.Context, yclids []string) ([]anti_fraud.Row, error) {
+
+	reqs := []anti_fraud.Requests{}
+	for _, v := range yclids {
+		req := anti_fraud.Requests{
+			Yclid: v,
+		}
+		reqs = append(reqs, req)
+	}
+	reqContent := anti_fraud.Req{Method: "get", Params: anti_fraud.Params{FieldNames: []string{"Yclid", "Phone", "Email", "Score"},
+		SelectionCriteria: anti_fraud.SelectionCriteria{Requests: reqs}}}
+	body, err := json.Marshal(reqContent)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.direct.yandex.com/json/v5/conversionscores", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println(err)
+	}
+	req.Header.Add("Authorization", "Bearer "+*c.Token)
+	req.Header.Add("Client-Login", c.Login)
+	resp, err := c.Tr.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	t := time.Now().Format(time.DateTime)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code %d", resp.StatusCode)
+	}
+
+	var res anti_fraud.Response
+	reader, _ := io.ReadAll(resp.Body)
+	err = json.Unmarshal(reader, &res)
+
+	for i := 0; i < len(res.Result.ConversionScores); i++ {
+		res.Result.ConversionScores[i].Date = t
+		res.Result.ConversionScores[i].Login = c.Login
+	}
+	return res.Result.ConversionScores, nil
 }
 
 func createTSVFile(dir string, filename string, resp *http.Response) (string, int, error) {

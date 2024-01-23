@@ -11,10 +11,12 @@ import (
 	"github.com/mg-realcom/direct-sdk/statistics"
 	"github.com/rs/zerolog"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -89,6 +91,76 @@ type Payload struct {
 			} `json:"TextAd"`
 		} `json:"Ads"`
 	} `json:"params"`
+}
+
+func (c *Client) GetCampaigns(ctx context.Context, dateRange statistics.DateRange) ([]string, error) {
+	rand.Seed(time.Now().UnixNano())
+	randomInt := rand.Intn(99999)
+	repName := fmt.Sprintf("campaigns_%s_%s - %s_%d", c.Login, dateRange.From, dateRange.To, randomInt)
+	fmt.Println(repName)
+	params := statistics.ReportDefinition{
+		Selection: &statistics.SelectionCriteria{
+			DateFrom: dateRange.From,
+			DateTo:   dateRange.To,
+			Filter:   nil,
+		},
+		DateRangeType: statistics.DateRangeCustomDate,
+		ReportType:    statistics.CustomReport,
+		FieldNames:    []string{"CampaignType"},
+		ReportName:    repName,
+		Format:        common.FormatTSV,
+		IncludeVAT:    common.NO,
+	}
+	reqContent := Request{Params: params}
+	body, err := json.Marshal(reqContent)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.direct.yandex.com/json/v5/reports", bytes.NewBuffer(body))
+		if err != nil {
+			return nil, err
+		}
+		c.buildHeader(req)
+		c.waitInfo(params.ReportName)
+		time.Sleep(time.Duration(c.statisticsLimit.retryInterval) * time.Second)
+		resp, err := c.Tr.Do(req)
+		defer resp.Body.Close()
+
+		if err != nil {
+			return nil, fmt.Errorf("do request: %w", err)
+		}
+		respDump, _ := httputil.DumpResponse(resp, true)
+		switch resp.StatusCode {
+		case http.StatusOK:
+			responseBody, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			campaignsSlice := strings.Fields(string(responseBody))
+			if len(campaignsSlice) < 2 {
+				fmt.Println(campaignsSlice)
+				return nil, errors.New("no campaigns")
+			}
+			return campaignsSlice[1:], nil
+		case http.StatusCreated, http.StatusAccepted:
+			err := c.waitInit(resp)
+			if err != nil {
+				return nil, fmt.Errorf("waitInit: %w", err)
+			}
+		case http.StatusInternalServerError:
+			c.logger.Info().Msg(fmt.Sprintf("RESPONSE:\n%s", respDump))
+			return nil, errors.New("internal server error")
+		case http.StatusBadRequest:
+			data, err := c.badRequestPrepare(resp)
+			if err != nil {
+				return nil, fmt.Errorf("cannot prepare bad request: %w", err)
+			}
+			return nil, fmt.Errorf("ошибка получения кампаний %s", data.Error.ErrorDetail)
+		default:
+			return nil, fmt.Errorf("cтатус код сервера при получении кампаний %v", resp.StatusCode)
+		}
+	}
 }
 
 func (c *Client) GetReport(ctx context.Context, prefixTitleRequest, dir string, typeReport statistics.ReportType, fields []string, filter []statistics.Filter, dateRange statistics.DateRange) ([]string, error) {

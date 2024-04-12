@@ -40,6 +40,17 @@ func (c *Client) GetAds(ctx context.Context, params GetAdsDefinition) (GetAdsRes
 		return GetAdsResponse{}, fmt.Errorf("statusCodeHandler: %w", err)
 	}
 
+	var errResp APIError
+
+	err = json.Unmarshal(body, &errResp)
+	if err != nil {
+		return GetAdsResponse{}, err
+	}
+
+	if errResp.Err.ErrorCode != 0 {
+		return GetAdsResponse{}, errResp
+	}
+
 	var response GetAdsResponse
 
 	err = json.Unmarshal(body, &response)
@@ -101,7 +112,7 @@ type GetAdsResponse struct {
 }
 
 type AdItem struct {
-	ID         int64  `json:"Id"`
+	ID         int    `json:"Id"`
 	CampaignID int    `json:"CampaignId"`
 	AdGroupID  int64  `json:"AdGroupId"`
 	TextAd     string `json:"TextAd"`
@@ -111,7 +122,7 @@ func (r *GetAdsResponse) UnmarshalJSON(data []byte) error {
 	var in struct {
 		Result struct {
 			Ads []struct {
-				ID         int64           `json:"Id"`
+				ID         int             `json:"Id"`
 				CampaignID int             `json:"CampaignId"`
 				AdGroupID  int64           `json:"AdGroupId"`
 				TextAd     json.RawMessage `json:"TextAd"`

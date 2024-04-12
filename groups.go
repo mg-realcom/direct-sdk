@@ -40,6 +40,17 @@ func (c *Client) GetGroups(ctx context.Context, params GetGroupsDefinition) (Get
 		return GetGroupsResponse{}, fmt.Errorf("statusCodeHandler: %w", err)
 	}
 
+	var errResp APIError
+
+	err = json.Unmarshal(body, &errResp)
+	if err != nil {
+		return GetGroupsResponse{}, err
+	}
+
+	if errResp.Err.ErrorCode != 0 {
+		return GetGroupsResponse{}, errResp
+	}
+
 	var response GetGroupsResponse
 
 	err = json.Unmarshal(body, &response)
@@ -91,7 +102,7 @@ type GetGroupsResponse struct {
 }
 
 type AdGroupItem struct {
-	ID            int64  `json:"Id"`
+	ID            int    `json:"Id"`
 	Name          string `json:"Name"`
 	CampaignId    int64  `json:"CampaignId"`
 	Status        string `json:"Status"`

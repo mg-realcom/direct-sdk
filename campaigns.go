@@ -40,6 +40,17 @@ func (c *Client) GetCampaigns(ctx context.Context, params GetCampaignsDefinition
 		return GetCampaignsResponse{}, fmt.Errorf("statusCodeHandler: %w", err)
 	}
 
+	var errResp APIError
+
+	err = json.Unmarshal(body, &errResp)
+	if err != nil {
+		return GetCampaignsResponse{}, err
+	}
+
+	if errResp.Err.ErrorCode != 0 {
+		return GetCampaignsResponse{}, errResp
+	}
+
 	var response GetCampaignsResponse
 
 	err = json.Unmarshal(body, &response)
@@ -92,7 +103,7 @@ type GetCampaignsResponse struct {
 }
 
 type CampaignItem struct {
-	ID                  int64  `json:"Id"`
+	ID                  int    `json:"Id"`
 	Name                string `json:"Name"`
 	StartDate           string `json:"StartDate"`
 	Type                string `json:"Type"`

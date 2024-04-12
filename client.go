@@ -72,10 +72,11 @@ func NewClient(tr *http.Client, login string, token *string, app *App, sandbox b
 
 func (c *Client) buildHeader(req *http.Request) {
 	req.Header.Add("Authorization", "Bearer "+*c.Token)
-	req.Header.Add("Client-Login", c.Login)
 	req.Header.Add("Accept-Language", "ru")
+	req.Header.Add("Client-Login", c.Login)
 	req.Header.Add("skipReportHeader", "true")
 	req.Header.Add("skipReportSummary", "true")
+	req.Header.Add("Content-Type", "application/json")
 }
 
 type Payload struct {
@@ -93,7 +94,7 @@ type Payload struct {
 	} `json:"params"`
 }
 
-func (c *Client) GetCampaigns(ctx context.Context, dateRange statistics.DateRange) ([]string, error) {
+func (c *Client) GetReportCampaigns(ctx context.Context, dateRange statistics.DateRange) ([]string, error) {
 	rand.Seed(time.Now().UnixNano())
 	randomInt := rand.Intn(99999)
 	repName := fmt.Sprintf("campaigns_%s_%s - %s_%d", c.Login, dateRange.From, dateRange.To, randomInt)
@@ -106,7 +107,7 @@ func (c *Client) GetCampaigns(ctx context.Context, dateRange statistics.DateRang
 		},
 		DateRangeType: statistics.DateRangeCustomDate,
 		ReportType:    statistics.CustomReport,
-		FieldNames:    []string{"CampaignType"},
+		FieldNames:    []string{"CampaignId"},
 		ReportName:    repName,
 		Format:        common.FormatTSV,
 		IncludeVAT:    common.NO,
@@ -165,7 +166,9 @@ func (c *Client) GetCampaigns(ctx context.Context, dateRange statistics.DateRang
 
 func (c *Client) GetReport(ctx context.Context, prefixTitleRequest, dir string, typeReport statistics.ReportType, fields []string, filter []statistics.Filter, dateRange statistics.DateRange) ([]string, error) {
 	t := time.Now().Format("2006-01-02")
+
 	var reportName string
+
 	var dtRangeType statistics.DateRangeType
 
 	reportName = fmt.Sprintf("%s_%s_%s_%s_%s", c.Login, prefixTitleRequest, dateRange.From, dateRange.To, t)
@@ -189,6 +192,7 @@ func (c *Client) GetReport(ctx context.Context, prefixTitleRequest, dir string, 
 	if err != nil {
 		return nil, fmt.Errorf("GetFiles for %s – %w", c.Login, err)
 	}
+
 	return fileNames, nil
 }
 
@@ -395,4 +399,44 @@ func createTSVFile(dir string, filename string, resp *http.Response) (string, in
 	stat, _ := f.Stat()
 	size := stat.Size()
 	return f.Name(), int(size), nil
+}
+
+func statusCodeHandler(resp *http.Response) error {
+	if resp == nil {
+		return fmt.Errorf("response is nil")
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound, http.StatusInternalServerError:
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("status code: %d", resp.StatusCode)
+		}
+
+		var errResp APIError
+
+		err = json.Unmarshal(respBody, &errResp)
+		if err != nil {
+			return fmt.Errorf("status code: %d", resp.StatusCode)
+		}
+
+		return errResp
+	default:
+		return fmt.Errorf("unknown status code: %d", resp.StatusCode)
+	}
+}
+
+type APIError struct {
+	Err struct {
+		RequestID   string `json:"request_id"`
+		ErrorCode   int    `json:"error_code"`
+		ErrorDetail string `json:"error_detail"`
+		ErrorString string `json:"error_string"`
+	} `json:"error"`
+}
+
+func (e APIError) Error() string {
+	return fmt.Sprintf("%v (%s)", e.Err.ErrorCode, e.Err.ErrorString)
 }

@@ -85,15 +85,15 @@ type GetCampaignsRequest struct {
 type GetCampaignsDefinition struct {
 	Selection              CampaignsSelectionCriteria `json:"SelectionCriteria,omitempty"`
 	FieldNames             []string                   `json:"FieldNames"`
-	TextCampaignFieldNames *[]string                  `json:"TextCampaignFieldNames,omitempty"`
+	TextCampaignFieldNames []string                   `json:"TextCampaignFieldNames,omitempty"`
 }
 
 type CampaignsSelectionCriteria struct {
-	IDs             *[]int    `json:"Ids,omitempty"`
-	Types           *[]string `json:"Types,omitempty"`
-	States          *[]string `json:"States,omitempty"`
-	Statuses        *[]string `json:"Statuses,omitempty"`
-	StatusesPayment *[]string `json:"StatusesPayment,omitempty"`
+	IDs             []int    `json:"Ids,omitempty"`
+	Types           []string `json:"Types,omitempty"`
+	States          []string `json:"States,omitempty"`
+	Statuses        []string `json:"Statuses,omitempty"`
+	StatusesPayment []string `json:"StatusesPayment,omitempty"`
 }
 
 type GetCampaignsResponse struct {

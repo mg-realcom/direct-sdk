@@ -85,24 +85,24 @@ type GetAdsRequest struct {
 type GetAdsDefinition struct {
 	Selection        AdsSelectionCriteria `json:"SelectionCriteria,omitempty"`
 	FieldNames       []string             `json:"FieldNames"`
-	TextAdFieldNames *[]string            `json:"TextAdFieldNames,omitempty"`
+	TextAdFieldNames []string             `json:"TextAdFieldNames,omitempty"`
 }
 
 type AdsSelectionCriteria struct {
-	IDs                         *[]int    `json:"Ids,omitempty"`
-	States                      *[]string `json:"States,omitempty"`
-	Statuses                    *[]string `json:"Statuses,omitempty"`
-	CampaignIDS                 *[]int    `json:"CampaignIds,omitempty"`
-	AdGroupIDS                  *[]int    `json:"AdGroupIds,omitempty"`
-	Types                       *[]string `json:"Types,omitempty"`
-	Mobile                      *string   `json:"Mobile,omitempty"`
-	VCardIDS                    *[]int    `json:"VCardIds,omitempty"`
-	SiteLinkSetIDS              *[]int    `json:"SitelinkSetIds,omitempty"`
-	AdImageHashes               *[]string `json:"AdImageHashes,omitempty"`
-	VCardModerationStatuses     *[]string `json:"VCardModerationStatuses,omitempty"`
-	SiteLinksModerationStatuses *[]string `json:"SitelinksModerationStatuses,omitempty"`
-	AdImageModerationStatuses   *[]string `json:"AdImageModerationStatuses,omitempty"`
-	AdExtensionIDS              *[]int    `json:"AdExtensionIds,omitempty"`
+	IDs                         []int    `json:"Ids,omitempty"`
+	States                      []string `json:"States,omitempty"`
+	Statuses                    []string `json:"Statuses,omitempty"`
+	CampaignIDs                 []int    `json:"CampaignIds,omitempty"`
+	AdGroupIDs                  []int    `json:"AdGroupIds,omitempty"`
+	Types                       []string `json:"Types,omitempty"`
+	Mobile                      *string  `json:"Mobile,omitempty"`
+	VCardIDs                    []int    `json:"VCardIds,omitempty"`
+	SiteLinkSetIDs              []int    `json:"SitelinkSetIds,omitempty"`
+	AdImageHashes               []string `json:"AdImageHashes,omitempty"`
+	VCardModerationStatuses     []string `json:"VCardModerationStatuses,omitempty"`
+	SiteLinksModerationStatuses []string `json:"SitelinksModerationStatuses,omitempty"`
+	AdImageModerationStatuses   []string `json:"AdImageModerationStatuses,omitempty"`
+	AdExtensionIDs              []int    `json:"AdExtensionIds,omitempty"`
 }
 
 type GetAdsResponse struct {

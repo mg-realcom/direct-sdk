@@ -85,14 +85,14 @@ type GetGroupsRequest struct {
 type GetGroupsDefinition struct {
 	Selection                    GroupsSelectionCriteria `json:"SelectionCriteria,omitempty"`
 	FieldNames                   []string                `json:"FieldNames"`
-	DynamicTextAdGroupFieldNames *[]string               `json:"DynamicTextAdGroupFieldNames,omitempty"`
+	DynamicTextAdGroupFieldNames []string                `json:"DynamicTextAdGroupFieldNames,omitempty"`
 }
 
 type GroupsSelectionCriteria struct {
-	CampaignIds     *[]int    `json:"CampaignIds,omitempty"`
-	IDs             *[]int    `json:"Ids,omitempty"`
-	Statuses        *[]string `json:"Statuses,omitempty"`
-	ServingStatuses *[]string `json:"ServingStatuses,omitempty"`
+	CampaignIds     []int    `json:"CampaignIds,omitempty"`
+	IDs             []int    `json:"Ids,omitempty"`
+	Statuses        []string `json:"Statuses,omitempty"`
+	ServingStatuses []string `json:"ServingStatuses,omitempty"`
 }
 
 type GetGroupsResponse struct {
@@ -104,7 +104,7 @@ type GetGroupsResponse struct {
 type AdGroupItem struct {
 	ID            int    `json:"Id"`
 	Name          string `json:"Name"`
-	CampaignId    int64  `json:"CampaignId"`
+	CampaignID    int64  `json:"CampaignId"`
 	Status        string `json:"Status"`
 	ServingStatus string `json:"ServingStatus"`
 	Type          string `json:"Type"`
